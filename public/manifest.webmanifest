@@ -1,0 +1,18 @@
+{
+  "name": "AP Flour",
+  "short_name": "AP Flour",
+  "description": "All-purpose play tools for quick group decisions.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f7f7f4",
+  "theme_color": "#315f56",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
