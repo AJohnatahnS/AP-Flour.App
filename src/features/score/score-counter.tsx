@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 
+import { formatCopy } from "@/lib/i18n/dictionaries";
+import { useLocaleCopy } from "@/lib/i18n/use-locale-copy";
 import {
   addScorePlayer,
   adjustScore,
@@ -20,13 +22,21 @@ const defaultPlayers: ScorePlayer[] = [
 const scoreActions = [1, -1, 5, -5] as const;
 
 export function ScoreCounter() {
-  const [players, setPlayers] = useState<ScorePlayer[]>(defaultPlayers);
+  const copy = useLocaleCopy();
+  const [players, setPlayers] = useState<ScorePlayer[]>(() =>
+    defaultPlayers.map((player, index) => ({
+      ...player,
+      name: formatCopy(copy.tools.score.defaultPlayer, { count: index + 1 }),
+    })),
+  );
 
   function handleAddPlayer() {
     setPlayers((currentPlayers) =>
       addScorePlayer(currentPlayers, {
         id: createPlayerId(),
-        name: `Team ${currentPlayers.length + 1}`,
+        name: formatCopy(copy.tools.score.defaultPlayer, {
+          count: currentPlayers.length + 1,
+        }),
       }),
     );
   }
@@ -36,9 +46,11 @@ export function ScoreCounter() {
       <div className="rounded-lg border border-border bg-surface p-4 shadow-sm sm:p-5">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <p className="text-sm font-medium text-muted">Score Counter</p>
+            <p className="text-sm font-medium text-muted">
+              {copy.tools.score.title}
+            </p>
             <h1 className="text-2xl font-semibold tracking-normal">
-              Track players and teams
+              {copy.tools.score.heading}
             </h1>
           </div>
           <div className="flex gap-2">
@@ -47,14 +59,14 @@ export function ScoreCounter() {
               onClick={handleAddPlayer}
               type="button"
             >
-              Add player
+              {copy.tools.score.addPlayer}
             </button>
             <button
               className="h-11 rounded-md bg-primary px-4 text-sm font-semibold text-primary-foreground transition hover:opacity-90"
               onClick={() => setPlayers((currentPlayers) => resetAllScores(currentPlayers))}
               type="button"
             >
-              Reset all
+              {copy.tools.score.resetAll}
             </button>
           </div>
         </div>
@@ -68,7 +80,7 @@ export function ScoreCounter() {
               <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
                 <div className="grid gap-2">
                   <label className="text-sm font-semibold text-muted">
-                    Name
+                    {copy.tools.score.nameLabel}
                     <input
                       className="mt-2 h-11 w-full rounded-md border border-border bg-surface px-3 text-base font-semibold outline-none transition focus:border-primary"
                       maxLength={48}
@@ -101,7 +113,7 @@ export function ScoreCounter() {
                     }
                     type="button"
                   >
-                    Remove
+                    {copy.common.remove}
                   </button>
                 </div>
               </div>
@@ -130,7 +142,7 @@ export function ScoreCounter() {
                   }
                   type="button"
                 >
-                  Reset
+                  {copy.common.reset}
                 </button>
               </div>
             </article>
@@ -139,7 +151,7 @@ export function ScoreCounter() {
       </div>
 
       <aside className="rounded-lg border border-border bg-surface p-4 shadow-sm sm:p-5">
-        <h2 className="text-lg font-semibold">Leaderboard</h2>
+        <h2 className="text-lg font-semibold">{copy.tools.score.leaderboard}</h2>
         <ol className="mt-4 grid gap-2">
           {[...players]
             .sort((a, b) => b.score - a.score || a.name.localeCompare(b.name))

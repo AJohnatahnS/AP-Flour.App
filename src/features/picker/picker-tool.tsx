@@ -7,6 +7,8 @@ import {
   applyRandomListCheatWeights,
   findForcedRandomListItem,
 } from "@/lib/cheat/random-list";
+import { formatCopy } from "@/lib/i18n/dictionaries";
+import { useLocaleCopy } from "@/lib/i18n/use-locale-copy";
 import {
   getPresetStoreServerSnapshot,
   getPresetStoreSnapshot,
@@ -39,6 +41,7 @@ const configuredCheatPin = getConfiguredCheatPin(
 );
 
 export function PickerTool() {
+  const copy = useLocaleCopy();
   const [items, setItems] = useState<RandomListItem[]>(defaultItems);
   const [result, setResult] = useState<RandomListItem | null>(null);
   const [history, setHistory] = useState<RandomListItem[]>([]);
@@ -115,7 +118,7 @@ export function PickerTool() {
       return;
     }
 
-    setCheatError("Incorrect PIN");
+    setCheatError(copy.tools.dice.incorrectPin);
   }
 
   function handleUpdateItem(id: string, nextItem: Partial<RandomListItem>) {
@@ -134,7 +137,9 @@ export function PickerTool() {
         ...currentItems,
         {
           id: createItemId(),
-          label: `Item ${currentItems.length + 1}`,
+          label: formatCopy(copy.tools.picker.itemLabel, {
+            count: currentItems.length + 1,
+          }),
           color: "#64748b",
           weight: 1,
           enabled: true,
@@ -195,10 +200,12 @@ export function PickerTool() {
               onClick={handleCheatGesture}
               type="button"
             >
-              Picker
+              {copy.tools.picker.title}
             </button>
             <h1 className="text-2xl font-semibold tracking-normal">
-              Pick from {activeItemCount} active items
+              {formatCopy(copy.tools.picker.pickHeading, {
+                count: activeItemCount,
+              })}
             </h1>
           </div>
           <button
@@ -207,7 +214,7 @@ export function PickerTool() {
             onClick={handlePick}
             type="button"
           >
-            Pick
+            {copy.tools.picker.pick}
           </button>
         </div>
 
@@ -215,7 +222,9 @@ export function PickerTool() {
           <div className="mt-4 rounded-lg border border-border bg-background p-4">
             <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto]">
               <label className="grid gap-2">
-                <span className="text-sm font-semibold">Admin PIN</span>
+                <span className="text-sm font-semibold">
+                  {copy.common.adminPin}
+                </span>
                 <input
                   className="h-11 rounded-md border border-border bg-surface px-3 text-sm outline-none transition focus:border-primary"
                   inputMode="numeric"
@@ -230,7 +239,7 @@ export function PickerTool() {
                 onClick={handleUnlockCheat}
                 type="button"
               >
-                Unlock
+                {copy.common.unlock}
               </button>
             </div>
             {cheatError ? (
@@ -242,7 +251,9 @@ export function PickerTool() {
         {isCheatUnlocked ? (
           <div className="mt-4 rounded-lg border border-accent bg-accent-soft p-4 text-foreground">
             <div className="flex items-center justify-between gap-3">
-              <h2 className="text-sm font-semibold">Admin controls</h2>
+              <h2 className="text-sm font-semibold">
+                {copy.common.adminControls}
+              </h2>
               <button
                 className="h-8 rounded-md border border-border bg-surface px-2 text-xs font-medium text-muted transition hover:text-foreground"
                 onClick={() => {
@@ -252,20 +263,20 @@ export function PickerTool() {
                 }}
                 type="button"
               >
-                Lock
+                {copy.common.lock}
               </button>
             </div>
             <div className="mt-3 grid gap-3 sm:grid-cols-3">
               <label className="grid gap-2">
                 <span className="text-xs font-semibold text-muted">
-                  Force next
+                  {copy.common.forceNext}
                 </span>
                 <select
                   className="h-10 rounded-md border border-border bg-surface px-3 text-sm outline-none transition focus:border-primary"
                   onChange={(event) => setForceNextItemId(event.target.value)}
                   value={forceNextItemId}
                 >
-                  <option value="">None</option>
+                  <option value="">{copy.common.none}</option>
                   {activeItems.map((item) => (
                     <option key={item.id} value={item.id}>
                       {item.label}
@@ -275,14 +286,14 @@ export function PickerTool() {
               </label>
               <label className="grid gap-2">
                 <span className="text-xs font-semibold text-muted">
-                  Favored item
+                  {copy.tools.picker.favoredItem}
                 </span>
                 <select
                   className="h-10 rounded-md border border-border bg-surface px-3 text-sm outline-none transition focus:border-primary"
                   onChange={(event) => setFavoredItemId(event.target.value)}
                   value={favoredItemId}
                 >
-                  <option value="">None</option>
+                  <option value="">{copy.common.none}</option>
                   {activeItems.map((item) => (
                     <option key={item.id} value={item.id}>
                       {item.label}
@@ -292,7 +303,7 @@ export function PickerTool() {
               </label>
               <label className="grid gap-2">
                 <span className="text-xs font-semibold text-muted">
-                  Favored weight
+                  {copy.tools.picker.favoredWeight}
                 </span>
                 <input
                   className="h-10 rounded-md border border-border bg-surface px-3 text-sm outline-none transition focus:border-primary"
@@ -306,7 +317,7 @@ export function PickerTool() {
               </label>
             </div>
             <p className="mt-2 text-xs text-muted">
-              Runtime only. Presets keep the original list and weights.
+              {copy.tools.picker.runtimeOnly}
             </p>
           </div>
         ) : null}
@@ -314,7 +325,9 @@ export function PickerTool() {
         <div className="mt-6 rounded-lg border border-border bg-background p-4">
           {result ? (
             <div>
-              <p className="text-sm font-medium text-muted">Picked</p>
+                <p className="text-sm font-medium text-muted">
+                  {copy.tools.picker.picked}
+                </p>
               <div className="mt-2 flex items-center gap-3">
                 <span
                   className="h-5 w-5 rounded-full border border-border"
@@ -325,7 +338,7 @@ export function PickerTool() {
             </div>
           ) : (
             <div className="flex min-h-28 items-center justify-center text-center text-sm text-muted">
-              Pick an enabled item from the list.
+              {copy.tools.picker.emptyResult}
             </div>
           )}
         </div>
@@ -334,13 +347,13 @@ export function PickerTool() {
           <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto]">
             <label className="grid gap-2">
               <span className="text-sm font-semibold text-foreground">
-                Preset name
+                {copy.common.presetName}
               </span>
               <input
                 className="h-11 rounded-md border border-border bg-surface px-3 text-sm outline-none transition focus:border-primary"
                 maxLength={48}
                 onChange={(event) => setPresetName(event.target.value)}
-                placeholder="Game night players"
+                placeholder={copy.tools.picker.presetPlaceholder}
                 type="text"
                 value={presetName}
               />
@@ -350,14 +363,14 @@ export function PickerTool() {
               onClick={handleSavePreset}
               type="button"
             >
-              Save preset
+              {copy.common.savePreset}
             </button>
           </div>
         </div>
 
         <div className="mt-6 grid gap-3">
           <div className="flex items-center justify-between gap-3">
-            <h2 className="text-lg font-semibold">Items</h2>
+            <h2 className="text-lg font-semibold">{copy.tools.picker.items}</h2>
             <div className="flex items-center gap-3">
               <label className="flex items-center gap-2 text-sm font-medium text-muted">
                 <input
@@ -366,14 +379,14 @@ export function PickerTool() {
                   onChange={(event) => setRemoveWinner(event.target.checked)}
                   type="checkbox"
                 />
-                Remove winner
+                {copy.common.removeWinner}
               </label>
               <button
                 className="h-9 rounded-md border border-border bg-surface px-3 text-sm font-semibold transition hover:border-primary"
                 onClick={handleAddItem}
                 type="button"
               >
-                Add
+                {copy.common.add}
               </button>
             </div>
           </div>
@@ -422,14 +435,14 @@ export function PickerTool() {
                   }
                   type="checkbox"
                 />
-                On
+                {copy.tools.picker.on}
               </label>
               <button
                 className="h-10 rounded-md border border-border bg-background px-2 text-xs font-medium text-muted transition hover:text-foreground"
                 onClick={() => handleRemoveItem(item.id)}
                 type="button"
               >
-                Remove
+                {copy.common.remove}
               </button>
             </div>
           ))}
@@ -438,7 +451,7 @@ export function PickerTool() {
 
       <aside className="grid gap-5">
         <div className="rounded-lg border border-border bg-surface p-4 shadow-sm sm:p-5">
-          <h2 className="text-lg font-semibold">Picker presets</h2>
+          <h2 className="text-lg font-semibold">{copy.tools.picker.presets}</h2>
           {presets.length > 0 ? (
             <ol className="mt-4 grid gap-2">
               {presets.map((preset) => (
@@ -456,7 +469,9 @@ export function PickerTool() {
                         {preset.name}
                       </span>
                       <span className="mt-1 block text-xs text-muted">
-                        {preset.value.items.length} items
+                        {formatCopy(copy.tools.picker.itemCount, {
+                          count: preset.value.items.length,
+                        })}
                       </span>
                     </button>
                     <button
@@ -464,7 +479,7 @@ export function PickerTool() {
                       onClick={() => handleDeletePreset(preset.id)}
                       type="button"
                     >
-                      Delete
+                      {copy.common.delete}
                     </button>
                   </div>
                 </li>
@@ -472,13 +487,13 @@ export function PickerTool() {
             </ol>
           ) : (
             <p className="mt-4 rounded-md border border-dashed border-border bg-background p-4 text-sm text-muted">
-              No picker presets saved.
+              {copy.tools.picker.emptyPresets}
             </p>
           )}
         </div>
 
         <div className="rounded-lg border border-border bg-surface p-4 shadow-sm sm:p-5">
-          <h2 className="text-lg font-semibold">Pick history</h2>
+          <h2 className="text-lg font-semibold">{copy.tools.picker.history}</h2>
           {history.length > 0 ? (
             <ol className="mt-4 grid gap-2">
               {history.map((item, index) => (
@@ -496,7 +511,7 @@ export function PickerTool() {
             </ol>
           ) : (
             <p className="mt-4 rounded-md border border-dashed border-border bg-background p-4 text-sm text-muted">
-              No picks yet.
+            {copy.tools.picker.emptyHistory}
             </p>
           )}
         </div>

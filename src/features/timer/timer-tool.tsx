@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 
+import { useLocaleCopy } from "@/lib/i18n/use-locale-copy";
 import {
   calculateCountdownRemainingMs,
   calculateStopwatchElapsedMs,
@@ -13,6 +14,7 @@ type TimerMode = "countdown" | "stopwatch";
 type RunState = "idle" | "running" | "paused" | "complete";
 
 export function TimerTool() {
+  const copy = useLocaleCopy();
   const [mode, setMode] = useState<TimerMode>("countdown");
   const [runState, setRunState] = useState<RunState>("idle");
   const [durationSeconds, setDurationSeconds] = useState(300);
@@ -24,12 +26,8 @@ export function TimerTool() {
   const durationMs = durationSeconds * 1000;
   const displayValue = mode === "countdown" ? remainingMs : stopwatchElapsedMs;
   const statusLabel = useMemo(() => {
-    if (runState === "complete") {
-      return "Complete";
-    }
-
-    return runState[0].toUpperCase() + runState.slice(1);
-  }, [runState]);
+    return copy.tools.timer[runState];
+  }, [copy.tools.timer, runState]);
 
   useEffect(() => {
     if (runState !== "running" || startedAtMs === null) {
@@ -137,9 +135,11 @@ export function TimerTool() {
       <div className="rounded-lg border border-border bg-surface p-4 shadow-sm sm:p-5">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <p className="text-sm font-medium text-muted">Timer</p>
+            <p className="text-sm font-medium text-muted">
+              {copy.tools.timer.title}
+            </p>
             <h1 className="text-2xl font-semibold tracking-normal">
-              Countdown and stopwatch
+              {copy.tools.timer.heading}
             </h1>
           </div>
           <div className="grid grid-cols-2 rounded-md border border-border bg-background p-1">
@@ -153,7 +153,7 @@ export function TimerTool() {
               onClick={() => handleModeChange("countdown")}
               type="button"
             >
-              Countdown
+              {copy.tools.timer.countdown}
             </button>
             <button
               aria-pressed={mode === "stopwatch"}
@@ -165,7 +165,7 @@ export function TimerTool() {
               onClick={() => handleModeChange("stopwatch")}
               type="button"
             >
-              Stopwatch
+              {copy.tools.timer.stopwatch}
             </button>
           </div>
         </div>
@@ -180,7 +180,7 @@ export function TimerTool() {
         {mode === "countdown" ? (
           <div className="mt-6 grid gap-4 sm:grid-cols-2">
             <NumberInput
-              label="Minutes"
+              label={copy.tools.timer.minutes}
               max={1440}
               min={0}
               onChange={(minutes) =>
@@ -189,7 +189,7 @@ export function TimerTool() {
               value={Math.floor(durationSeconds / 60)}
             />
             <NumberInput
-              label="Seconds"
+              label={copy.tools.timer.seconds}
               max={59}
               min={0}
               onChange={(seconds) =>
@@ -200,7 +200,7 @@ export function TimerTool() {
           </div>
         ) : (
           <p className="mt-6 rounded-lg border border-dashed border-border bg-background p-4 text-sm text-muted">
-            Stopwatch runs only while this page is open and active.
+            {copy.tools.timer.stopwatchHelp}
           </p>
         )}
 
@@ -210,20 +210,22 @@ export function TimerTool() {
             onClick={handleStartPause}
             type="button"
           >
-            {runState === "running" ? "Pause" : "Start"}
+            {runState === "running" ? copy.tools.timer.pause : copy.tools.timer.start}
           </button>
           <button
             className="h-12 rounded-md border border-border bg-surface px-4 text-sm font-semibold transition hover:border-primary"
             onClick={handleReset}
             type="button"
           >
-            Reset
+            {copy.common.reset}
           </button>
         </div>
       </div>
 
       <aside className="rounded-lg border border-border bg-surface p-4 shadow-sm sm:p-5">
-        <h2 className="text-lg font-semibold">Quick countdowns</h2>
+        <h2 className="text-lg font-semibold">
+          {copy.tools.timer.quickCountdowns}
+        </h2>
         <div className="mt-4 grid gap-2">
           {[60, 180, 300, 600].map((seconds) => (
             <button
@@ -238,7 +240,7 @@ export function TimerTool() {
           ))}
         </div>
         <p className="mt-4 text-sm leading-6 text-muted">
-          Foreground-only. No sound, vibration, or background alarm.
+          {copy.tools.timer.foregroundOnly}
         </p>
       </aside>
     </section>

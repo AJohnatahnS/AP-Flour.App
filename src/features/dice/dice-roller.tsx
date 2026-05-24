@@ -7,6 +7,7 @@ import {
   getConfiguredCheatPin,
   isValidCheatPin,
 } from "@/lib/cheat/dice";
+import { useLocaleCopy } from "@/lib/i18n/use-locale-copy";
 import {
   getPresetStoreServerSnapshot,
   getPresetStoreSnapshot,
@@ -35,6 +36,7 @@ const configuredCheatPin = getConfiguredCheatPin(
 );
 
 export function DiceRoller() {
+  const copy = useLocaleCopy();
   const [sides, setSides] = useState<DiceSides>(6);
   const [count, setCount] = useState(2);
   const [modifier, setModifier] = useState(0);
@@ -88,7 +90,7 @@ export function DiceRoller() {
       }
     } catch (error) {
       setCheatRollError(
-        error instanceof Error ? error.message : "Cheat settings are invalid",
+        error instanceof Error ? error.message : copy.tools.dice.invalidCheatSettings,
       );
     }
   }
@@ -114,7 +116,7 @@ export function DiceRoller() {
       return;
     }
 
-    setCheatError("Incorrect PIN");
+    setCheatError(copy.tools.dice.incorrectPin);
   }
 
   function loadPreset(preset: DicePreset) {
@@ -165,10 +167,10 @@ export function DiceRoller() {
               onClick={handleCheatGesture}
               type="button"
             >
-              Dice Roller
+              {copy.tools.dice.title}
             </button>
             <h1 className="text-2xl font-semibold tracking-normal">
-              Roll {rollLabel}
+              {copy.tools.dice.rollHeading.replace("{rollLabel}", rollLabel)}
             </h1>
           </div>
           <button
@@ -176,7 +178,7 @@ export function DiceRoller() {
             onClick={handleRoll}
             type="button"
           >
-            Roll
+            {copy.tools.dice.roll}
           </button>
         </div>
 
@@ -184,7 +186,9 @@ export function DiceRoller() {
           <div className="mt-4 rounded-lg border border-border bg-background p-4">
             <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto]">
               <label className="grid gap-2">
-                <span className="text-sm font-semibold">Admin PIN</span>
+                <span className="text-sm font-semibold">
+                  {copy.common.adminPin}
+                </span>
                 <input
                   className="h-11 rounded-md border border-border bg-surface px-3 text-sm outline-none transition focus:border-primary"
                   inputMode="numeric"
@@ -199,7 +203,7 @@ export function DiceRoller() {
                 onClick={handleUnlockCheat}
                 type="button"
               >
-                Unlock
+                {copy.common.unlock}
               </button>
             </div>
             {cheatError ? (
@@ -211,7 +215,9 @@ export function DiceRoller() {
         {isCheatUnlocked ? (
           <div className="mt-4 rounded-lg border border-accent bg-accent-soft p-4 text-foreground">
             <div className="flex items-center justify-between gap-3">
-              <h2 className="text-sm font-semibold">Admin controls</h2>
+              <h2 className="text-sm font-semibold">
+                {copy.common.adminControls}
+              </h2>
               <button
                 className="h-8 rounded-md border border-border bg-surface px-2 text-xs font-medium text-muted transition hover:text-foreground"
                 onClick={() => {
@@ -222,13 +228,13 @@ export function DiceRoller() {
                 }}
                 type="button"
               >
-                Lock
+                {copy.common.lock}
               </button>
             </div>
             <div className="mt-3 grid gap-3 sm:grid-cols-2">
               <label className="grid gap-2">
                 <span className="text-xs font-semibold text-muted">
-                  Force next result
+                  {copy.tools.dice.forceNextResult}
                 </span>
                 <input
                   className="h-10 rounded-md border border-border bg-surface px-3 text-sm outline-none transition focus:border-primary"
@@ -241,7 +247,7 @@ export function DiceRoller() {
               </label>
               <label className="grid gap-2">
                 <span className="text-xs font-semibold text-muted">
-                  Favored face
+                  {copy.tools.dice.favoredFace}
                 </span>
                 <select
                   className="h-10 rounded-md border border-border bg-surface px-3 text-sm outline-none transition focus:border-primary"
@@ -252,7 +258,7 @@ export function DiceRoller() {
                   }
                   value={favoredFace ?? ""}
                 >
-                  <option value="">None</option>
+                  <option value="">{copy.common.none}</option>
                   {Array.from({ length: sides }, (_, index) => index + 1).map(
                     (face) => (
                       <option key={face} value={face}>
@@ -263,7 +269,7 @@ export function DiceRoller() {
                 </select>
               </label>
               <NumberStepper
-                label="Favored weight"
+                label={copy.tools.dice.favoredWeight}
                 max={100}
                 min={2}
                 onChange={setFavoredWeight}
@@ -280,7 +286,9 @@ export function DiceRoller() {
 
         <div className="mt-6 grid gap-5">
           <fieldset>
-            <legend className="text-sm font-semibold text-foreground">Die</legend>
+            <legend className="text-sm font-semibold text-foreground">
+              {copy.tools.dice.die}
+            </legend>
             <div className="mt-2 grid grid-cols-3 gap-2 sm:grid-cols-6">
               {supportedDiceSides.map((side) => (
                 <button
@@ -302,14 +310,14 @@ export function DiceRoller() {
 
           <div className="grid gap-4 sm:grid-cols-2">
             <NumberStepper
-              label="Dice"
+              label={copy.tools.dice.dice}
               max={20}
               min={1}
               onChange={setCount}
               value={count}
             />
             <NumberStepper
-              label="Modifier"
+              label={copy.tools.dice.modifier}
               max={999}
               min={-999}
               onChange={setModifier}
@@ -322,13 +330,13 @@ export function DiceRoller() {
           <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto]">
             <label className="grid gap-2">
               <span className="text-sm font-semibold text-foreground">
-                Preset name
+                {copy.common.presetName}
               </span>
               <input
                 className="h-11 rounded-md border border-border bg-surface px-3 text-sm outline-none transition focus:border-primary"
                 maxLength={48}
                 onChange={(event) => setPresetName(event.target.value)}
-                placeholder="Boss fight"
+                placeholder={copy.tools.dice.presetPlaceholder}
                 type="text"
                 value={presetName}
               />
@@ -338,18 +346,20 @@ export function DiceRoller() {
               onClick={handleSavePreset}
               type="button"
             >
-              Save preset
+              {copy.common.savePreset}
             </button>
           </div>
           <p className="mt-2 text-xs text-muted">
-            Presets are saved only on this device. Roll results and cheat settings are not saved.
+            {copy.tools.dice.presetHelp}
           </p>
         </div>
 
         <div className="mt-6 rounded-lg border border-border bg-background p-4">
           {latestRoll ? (
             <div>
-              <p className="text-sm font-medium text-muted">Latest result</p>
+              <p className="text-sm font-medium text-muted">
+                {copy.tools.dice.latestResult}
+              </p>
               <div className="mt-2 flex flex-wrap items-end gap-3">
                 <span className="text-6xl font-semibold leading-none">
                   {latestRoll.total}
@@ -371,7 +381,7 @@ export function DiceRoller() {
             </div>
           ) : (
             <div className="flex min-h-36 items-center justify-center text-center text-sm text-muted">
-              Choose dice, then roll to see total and per-die results.
+              {copy.tools.dice.emptyResult}
             </div>
           )}
         </div>
@@ -379,7 +389,7 @@ export function DiceRoller() {
 
       <aside className="grid gap-5">
         <div className="rounded-lg border border-border bg-surface p-4 shadow-sm sm:p-5">
-          <h2 className="text-lg font-semibold">Dice presets</h2>
+          <h2 className="text-lg font-semibold">{copy.tools.dice.presets}</h2>
           {presets.length > 0 ? (
             <ol className="mt-4 grid gap-2">
               {presets.map((preset) => (
@@ -405,7 +415,7 @@ export function DiceRoller() {
                       onClick={() => handleDeletePreset(preset.id)}
                       type="button"
                     >
-                      Delete
+                      {copy.common.delete}
                     </button>
                   </div>
                 </li>
@@ -413,14 +423,16 @@ export function DiceRoller() {
             </ol>
           ) : (
             <p className="mt-4 rounded-md border border-dashed border-border bg-background p-4 text-sm text-muted">
-              No dice presets saved.
+              {copy.tools.dice.emptyPresets}
             </p>
           )}
         </div>
 
         <div className="rounded-lg border border-border bg-surface p-4 shadow-sm sm:p-5">
         <div className="flex items-center justify-between gap-3">
-          <h2 className="text-lg font-semibold">Recent rolls</h2>
+          <h2 className="text-lg font-semibold">
+            {copy.tools.dice.recentRolls}
+          </h2>
           <button
             className="h-9 rounded-md border border-border bg-surface-strong px-3 text-sm font-medium text-muted transition hover:text-foreground"
             disabled={history.length === 0}
@@ -430,7 +442,7 @@ export function DiceRoller() {
             }}
             type="button"
           >
-            Clear
+            {copy.common.clear}
           </button>
         </div>
         {history.length > 0 ? (
@@ -447,14 +459,14 @@ export function DiceRoller() {
                   <span className="text-xl font-semibold">{item.total}</span>
                 </div>
                 <p className="mt-1 text-xs text-muted">
-                  Rolls: {item.rolls.join(", ")}
+                  {copy.tools.dice.rolls}: {item.rolls.join(", ")}
                 </p>
               </li>
             ))}
           </ol>
         ) : (
           <p className="mt-4 rounded-md border border-dashed border-border bg-background p-4 text-sm text-muted">
-            No rolls yet.
+            {copy.tools.dice.emptyHistory}
           </p>
         )}
         </div>

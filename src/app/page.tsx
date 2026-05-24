@@ -1,24 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useSyncExternalStore } from "react";
 
 import { SavedPresetsSummary } from "@/features/presets/saved-presets-summary";
-import { dictionaries } from "@/lib/i18n/dictionaries";
-import {
-  getSettingsStoreServerSnapshot,
-  getSettingsStoreSnapshot,
-  subscribeSettingsStore,
-} from "@/lib/settings/local-storage";
-import { toolCatalog } from "@/lib/tools/catalog";
+import { useLocaleCopy } from "@/lib/i18n/use-locale-copy";
+import { getLocalizedToolCatalog } from "@/lib/tools/catalog";
 
 export default function Home() {
-  const settings = useSyncExternalStore(
-    subscribeSettingsStore,
-    getSettingsStoreSnapshot,
-    getSettingsStoreServerSnapshot,
-  );
-  const copy = dictionaries[settings.locale];
+  const copy = useLocaleCopy();
+  const toolCatalog = getLocalizedToolCatalog(copy);
 
   return (
     <main className="min-h-dvh bg-background text-foreground">

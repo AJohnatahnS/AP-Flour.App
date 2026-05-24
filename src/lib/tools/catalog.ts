@@ -1,3 +1,5 @@
+import type { AppDictionary } from "@/lib/i18n/dictionaries";
+
 export type ToolId = "dice" | "wheel" | "picker" | "score" | "timer";
 
 export type ToolCatalogItem = {
@@ -45,3 +47,12 @@ export const toolCatalog: ToolCatalogItem[] = [
     tone: "border-l-amber-600",
   },
 ];
+
+export function getLocalizedToolCatalog(copy: AppDictionary): ToolCatalogItem[] {
+  return toolCatalog.map((tool) => ({
+    ...tool,
+    action: copy.tools[tool.id].action,
+    description: copy.tools[tool.id].description,
+    name: copy.tools[tool.id].name,
+  }));
+}
