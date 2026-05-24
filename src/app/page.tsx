@@ -1,10 +1,24 @@
-import Link from "next/link";
+"use client";
 
-import { defaultLocale, dictionaries } from "@/lib/i18n/dictionaries";
+import Link from "next/link";
+import { useSyncExternalStore } from "react";
+
+import { SavedPresetsSummary } from "@/features/presets/saved-presets-summary";
+import { dictionaries } from "@/lib/i18n/dictionaries";
+import {
+  getSettingsStoreServerSnapshot,
+  getSettingsStoreSnapshot,
+  subscribeSettingsStore,
+} from "@/lib/settings/local-storage";
 import { toolCatalog } from "@/lib/tools/catalog";
 
 export default function Home() {
-  const copy = dictionaries[defaultLocale];
+  const settings = useSyncExternalStore(
+    subscribeSettingsStore,
+    getSettingsStoreSnapshot,
+    getSettingsStoreServerSnapshot,
+  );
+  const copy = dictionaries[settings.locale];
 
   return (
     <main className="min-h-dvh bg-background text-foreground">
@@ -14,12 +28,12 @@ export default function Home() {
             <p className="text-sm font-medium text-muted">{copy.tagline}</p>
             <h1 className="text-3xl font-semibold tracking-normal">{copy.appName}</h1>
           </div>
-          <button
+          <Link
             className="h-10 rounded-md border border-border bg-surface px-4 text-sm font-medium text-foreground shadow-sm transition hover:bg-surface-strong"
-            type="button"
+            href="/settings"
           >
             {copy.settings}
-          </button>
+          </Link>
         </header>
 
         <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -33,22 +47,12 @@ export default function Home() {
                   <h2 className="text-xl font-semibold">{tool.name}</h2>
                   <p className="mt-2 text-sm leading-6 text-muted">{tool.description}</p>
                 </div>
-                {tool.id === "dice" ? (
-                  <Link
-                    className="flex h-10 w-full items-center justify-center rounded-md bg-primary px-3 text-sm font-semibold text-primary-foreground transition hover:opacity-90"
-                    href="/dice"
-                  >
-                    {tool.action}
-                  </Link>
-                ) : (
-                  <button
-                    className="h-10 w-full rounded-md bg-surface-strong px-3 text-sm font-semibold text-muted"
-                    disabled
-                    type="button"
-                  >
-                    Coming soon
-                  </button>
-                )}
+                <Link
+                  className="flex h-10 w-full items-center justify-center rounded-md bg-primary px-3 text-sm font-semibold text-primary-foreground transition hover:opacity-90"
+                  href={getToolHref(tool.id)}
+                >
+                  {tool.action}
+                </Link>
               </div>
             </article>
           ))}
@@ -62,12 +66,27 @@ export default function Home() {
                 {copy.presetsDescription}
               </p>
             </div>
-            <span className="rounded-md bg-surface-strong px-3 py-2 text-sm font-medium text-muted">
-              {copy.noPresets}
-            </span>
+            <SavedPresetsSummary emptyLabel={copy.noPresets} />
           </div>
         </section>
       </div>
     </main>
   );
+}
+
+function getToolHref(toolId: string) {
+  switch (toolId) {
+    case "dice":
+      return "/dice";
+    case "wheel":
+      return "/wheel";
+    case "picker":
+      return "/picker";
+    case "score":
+      return "/score";
+    case "timer":
+      return "/timer";
+    default:
+      return "/";
+  }
 }

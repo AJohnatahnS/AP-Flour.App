@@ -1,7 +1,26 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState, useSyncExternalStore } from "react";
 
+import {
+  buildDiceCheatOptions,
+  getConfiguredCheatPin,
+  isValidCheatPin,
+} from "@/lib/cheat/dice";
+import {
+  getPresetStoreServerSnapshot,
+  getPresetStoreSnapshot,
+  readPresetStore,
+  subscribePresetStore,
+  writePresetStore,
+} from "@/lib/presets/local-storage";
+import {
+  createDicePreset,
+  deletePreset,
+  upsertPreset,
+  type AppPreset,
+  type DicePreset,
+} from "@/lib/presets/store";
 import {
   rollDice,
   supportedDiceSides,
@@ -10,6 +29,10 @@ import {
 } from "@/lib/random/engine";
 
 const maxHistoryItems = 5;
+const cheatGestureThreshold = 5;
+const configuredCheatPin = getConfiguredCheatPin(
+  process.env.NEXT_PUBLIC_CHEAT_PIN,
+);
 
 export function DiceRoller() {
   const [sides, setSides] = useState<DiceSides>(6);
@@ -17,6 +40,26 @@ export function DiceRoller() {
   const [modifier, setModifier] = useState(0);
   const [latestRoll, setLatestRoll] = useState<DiceRollResult | null>(null);
   const [history, setHistory] = useState<DiceRollResult[]>([]);
+  const [presetName, setPresetName] = useState("");
+  const [lastSavedPresetId, setLastSavedPresetId] = useState<string | null>(null);
+  const cheatGestureCountRef = useRef(0);
+  const [isCheatPromptOpen, setIsCheatPromptOpen] = useState(false);
+  const [cheatPinInput, setCheatPinInput] = useState("");
+  const [cheatError, setCheatError] = useState("");
+  const [isCheatUnlocked, setIsCheatUnlocked] = useState(false);
+  const [forceNextText, setForceNextText] = useState("");
+  const [favoredFace, setFavoredFace] = useState<number | undefined>();
+  const [favoredWeight, setFavoredWeight] = useState(8);
+  const [cheatRollError, setCheatRollError] = useState("");
+  const presetStore = useSyncExternalStore(
+    subscribePresetStore,
+    getPresetStoreSnapshot,
+    getPresetStoreServerSnapshot,
+  );
+  const presets = useMemo(
+    () => filterDicePresets(presetStore.presets),
+    [presetStore.presets],
+  );
 
   const rollLabel = useMemo(() => {
     const modifierLabel =
@@ -25,9 +68,91 @@ export function DiceRoller() {
   }, [count, modifier, sides]);
 
   function handleRoll() {
-    const result = rollDice({ sides, count, modifier });
-    setLatestRoll(result);
-    setHistory((items) => [result, ...items].slice(0, maxHistoryItems));
+    try {
+      const cheat = isCheatUnlocked
+        ? buildDiceCheatOptions({
+            count,
+            favoredFace,
+            favoredWeight,
+            forceNextText,
+            sides,
+          })
+        : undefined;
+      const result = rollDice({ sides, count, modifier }, { cheat });
+      setLatestRoll(result);
+      setHistory((items) => [result, ...items].slice(0, maxHistoryItems));
+      setCheatRollError("");
+
+      if (cheat?.forceNextResults) {
+        setForceNextText("");
+      }
+    } catch (error) {
+      setCheatRollError(
+        error instanceof Error ? error.message : "Cheat settings are invalid",
+      );
+    }
+  }
+
+  function handleCheatGesture() {
+    const nextCount = cheatGestureCountRef.current + 1;
+
+    if (nextCount >= cheatGestureThreshold) {
+      cheatGestureCountRef.current = 0;
+      setIsCheatPromptOpen(true);
+      return;
+    }
+
+    cheatGestureCountRef.current = nextCount;
+  }
+
+  function handleUnlockCheat() {
+    if (isValidCheatPin(cheatPinInput, configuredCheatPin)) {
+      setIsCheatUnlocked(true);
+      setIsCheatPromptOpen(false);
+      setCheatPinInput("");
+      setCheatError("");
+      return;
+    }
+
+    setCheatError("Incorrect PIN");
+  }
+
+  function loadPreset(preset: DicePreset) {
+    setSides(preset.value.sides);
+    setCount(preset.value.count);
+    setModifier(preset.value.modifier);
+    setPresetName(preset.name);
+    setLastSavedPresetId(preset.id);
+  }
+
+  function handleSavePreset() {
+    const store = readPresetStore();
+    const id = lastSavedPresetId ?? createPresetId();
+    const existingPreset = store.presets.find((preset) => preset.id === id);
+    const now = Date.now();
+    const preset = createDicePreset({
+      config: { sides, count, modifier },
+      id,
+      name: presetName,
+      now,
+    });
+    const nextStore = upsertPreset(store, {
+      ...preset,
+      createdAt: existingPreset?.createdAt ?? preset.createdAt,
+    });
+
+    writePresetStore(nextStore);
+    setPresetName(preset.name);
+    setLastSavedPresetId(preset.id);
+  }
+
+  function handleDeletePreset(id: string) {
+    const nextStore = deletePreset(readPresetStore(), id);
+    writePresetStore(nextStore);
+
+    if (lastSavedPresetId === id) {
+      setLastSavedPresetId(null);
+    }
   }
 
   return (
@@ -35,7 +160,13 @@ export function DiceRoller() {
       <div className="rounded-lg border border-border bg-surface p-4 shadow-sm sm:p-5">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <p className="text-sm font-medium text-muted">Dice Roller</p>
+            <button
+              className="text-left text-sm font-medium text-muted"
+              onClick={handleCheatGesture}
+              type="button"
+            >
+              Dice Roller
+            </button>
             <h1 className="text-2xl font-semibold tracking-normal">
               Roll {rollLabel}
             </h1>
@@ -48,6 +179,104 @@ export function DiceRoller() {
             Roll
           </button>
         </div>
+
+        {isCheatPromptOpen && !isCheatUnlocked ? (
+          <div className="mt-4 rounded-lg border border-border bg-background p-4">
+            <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto]">
+              <label className="grid gap-2">
+                <span className="text-sm font-semibold">Admin PIN</span>
+                <input
+                  className="h-11 rounded-md border border-border bg-surface px-3 text-sm outline-none transition focus:border-primary"
+                  inputMode="numeric"
+                  maxLength={4}
+                  onChange={(event) => setCheatPinInput(event.target.value)}
+                  type="text"
+                  value={cheatPinInput}
+                />
+              </label>
+              <button
+                className="h-11 self-end rounded-md bg-primary px-4 text-sm font-semibold text-primary-foreground transition hover:opacity-90"
+                onClick={handleUnlockCheat}
+                type="button"
+              >
+                Unlock
+              </button>
+            </div>
+            {cheatError ? (
+              <p className="mt-2 text-sm font-medium text-accent">{cheatError}</p>
+            ) : null}
+          </div>
+        ) : null}
+
+        {isCheatUnlocked ? (
+          <div className="mt-4 rounded-lg border border-accent bg-accent-soft p-4 text-foreground">
+            <div className="flex items-center justify-between gap-3">
+              <h2 className="text-sm font-semibold">Admin controls</h2>
+              <button
+                className="h-8 rounded-md border border-border bg-surface px-2 text-xs font-medium text-muted transition hover:text-foreground"
+                onClick={() => {
+                  setIsCheatUnlocked(false);
+                  setForceNextText("");
+                  setFavoredFace(undefined);
+                  setCheatRollError("");
+                }}
+                type="button"
+              >
+                Lock
+              </button>
+            </div>
+            <div className="mt-3 grid gap-3 sm:grid-cols-2">
+              <label className="grid gap-2">
+                <span className="text-xs font-semibold text-muted">
+                  Force next result
+                </span>
+                <input
+                  className="h-10 rounded-md border border-border bg-surface px-3 text-sm outline-none transition focus:border-primary"
+                  inputMode="numeric"
+                  onChange={(event) => setForceNextText(event.target.value)}
+                  placeholder="6, 6"
+                  type="text"
+                  value={forceNextText}
+                />
+              </label>
+              <label className="grid gap-2">
+                <span className="text-xs font-semibold text-muted">
+                  Favored face
+                </span>
+                <select
+                  className="h-10 rounded-md border border-border bg-surface px-3 text-sm outline-none transition focus:border-primary"
+                  onChange={(event) =>
+                    setFavoredFace(
+                      event.target.value ? Number(event.target.value) : undefined,
+                    )
+                  }
+                  value={favoredFace ?? ""}
+                >
+                  <option value="">None</option>
+                  {Array.from({ length: sides }, (_, index) => index + 1).map(
+                    (face) => (
+                      <option key={face} value={face}>
+                        {face}
+                      </option>
+                    ),
+                  )}
+                </select>
+              </label>
+              <NumberStepper
+                label="Favored weight"
+                max={100}
+                min={2}
+                onChange={setFavoredWeight}
+                value={favoredWeight}
+              />
+            </div>
+            {cheatRollError ? (
+              <p className="mt-2 text-sm font-medium text-accent">
+                {cheatRollError}
+              </p>
+            ) : null}
+          </div>
+        ) : null}
 
         <div className="mt-6 grid gap-5">
           <fieldset>
@@ -90,6 +319,34 @@ export function DiceRoller() {
         </div>
 
         <div className="mt-6 rounded-lg border border-border bg-background p-4">
+          <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto]">
+            <label className="grid gap-2">
+              <span className="text-sm font-semibold text-foreground">
+                Preset name
+              </span>
+              <input
+                className="h-11 rounded-md border border-border bg-surface px-3 text-sm outline-none transition focus:border-primary"
+                maxLength={48}
+                onChange={(event) => setPresetName(event.target.value)}
+                placeholder="Boss fight"
+                type="text"
+                value={presetName}
+              />
+            </label>
+            <button
+              className="h-11 self-end rounded-md border border-border bg-surface px-4 text-sm font-semibold text-foreground transition hover:border-primary"
+              onClick={handleSavePreset}
+              type="button"
+            >
+              Save preset
+            </button>
+          </div>
+          <p className="mt-2 text-xs text-muted">
+            Presets are saved only on this device. Roll results and cheat settings are not saved.
+          </p>
+        </div>
+
+        <div className="mt-6 rounded-lg border border-border bg-background p-4">
           {latestRoll ? (
             <div>
               <p className="text-sm font-medium text-muted">Latest result</p>
@@ -120,7 +377,48 @@ export function DiceRoller() {
         </div>
       </div>
 
-      <aside className="rounded-lg border border-border bg-surface p-4 shadow-sm sm:p-5">
+      <aside className="grid gap-5">
+        <div className="rounded-lg border border-border bg-surface p-4 shadow-sm sm:p-5">
+          <h2 className="text-lg font-semibold">Dice presets</h2>
+          {presets.length > 0 ? (
+            <ol className="mt-4 grid gap-2">
+              {presets.map((preset) => (
+                <li
+                  className="rounded-md border border-border bg-background p-3"
+                  key={preset.id}
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <button
+                      className="min-w-0 text-left"
+                      onClick={() => loadPreset(preset)}
+                      type="button"
+                    >
+                      <span className="block truncate text-sm font-semibold">
+                        {preset.name}
+                      </span>
+                      <span className="mt-1 block text-xs text-muted">
+                        {formatPresetValue(preset)}
+                      </span>
+                    </button>
+                    <button
+                      className="h-8 rounded-md border border-border px-2 text-xs font-medium text-muted transition hover:text-foreground"
+                      onClick={() => handleDeletePreset(preset.id)}
+                      type="button"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </li>
+              ))}
+            </ol>
+          ) : (
+            <p className="mt-4 rounded-md border border-dashed border-border bg-background p-4 text-sm text-muted">
+              No dice presets saved.
+            </p>
+          )}
+        </div>
+
+        <div className="rounded-lg border border-border bg-surface p-4 shadow-sm sm:p-5">
         <div className="flex items-center justify-between gap-3">
           <h2 className="text-lg font-semibold">Recent rolls</h2>
           <button
@@ -159,6 +457,7 @@ export function DiceRoller() {
             No rolls yet.
           </p>
         )}
+        </div>
       </aside>
     </section>
   );
@@ -229,4 +528,27 @@ function formatRoll(result: DiceRollResult) {
         : ` - ${Math.abs(result.modifier)}`;
 
   return `${result.count}d${result.sides}${modifierLabel}`;
+}
+
+function filterDicePresets(presets: AppPreset[]): DicePreset[] {
+  return presets.filter((preset) => preset.toolId === "dice");
+}
+
+function createPresetId() {
+  if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
+    return crypto.randomUUID();
+  }
+
+  return `preset-${Date.now()}`;
+}
+
+function formatPresetValue(preset: DicePreset) {
+  const modifier =
+    preset.value.modifier === 0
+      ? ""
+      : preset.value.modifier > 0
+        ? ` + ${preset.value.modifier}`
+        : ` - ${Math.abs(preset.value.modifier)}`;
+
+  return `${preset.value.count}d${preset.value.sides}${modifier}`;
 }
