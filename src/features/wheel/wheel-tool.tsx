@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 
 import { getConfiguredCheatPin, isValidCheatPin } from "@/lib/cheat/dice";
 import {
@@ -37,6 +37,7 @@ const defaultItems: RandomListItem[] = [
   { id: "wheel-4", label: "Dana", color: "#f59e0b", weight: 1, enabled: true },
 ];
 const cheatGestureThreshold = 5;
+const spinDurationMs = 900;
 const configuredCheatPin = getConfiguredCheatPin(
   process.env.NEXT_PUBLIC_CHEAT_PIN,
 );
@@ -48,8 +49,11 @@ export function WheelTool() {
   const [history, setHistory] = useState<RandomListItem[]>([]);
   const [removeWinner, setRemoveWinner] = useState(false);
   const [rotation, setRotation] = useState(0);
+  const [isSpinning, setIsSpinning] = useState(false);
   const [presetName, setPresetName] = useState("");
   const [lastSavedPresetId, setLastSavedPresetId] = useState<string | null>(null);
+  const removeWinnerTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const spinTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const cheatGestureCountRef = useRef(0);
   const [isCheatPromptOpen, setIsCheatPromptOpen] = useState(false);
   const [cheatPinInput, setCheatPinInput] = useState("");
@@ -70,7 +74,23 @@ export function WheelTool() {
   const activeItems = items.filter((item) => item.enabled);
   const wheelBackground = buildWheelBackground(activeItems);
 
+  useEffect(() => {
+    return () => {
+      if (removeWinnerTimeoutRef.current) {
+        clearTimeout(removeWinnerTimeoutRef.current);
+      }
+
+      if (spinTimeoutRef.current) {
+        clearTimeout(spinTimeoutRef.current);
+      }
+    };
+  }, []);
+
   function handleSpin() {
+    if (isSpinning) {
+      return;
+    }
+
     const forcedItem = isCheatUnlocked
       ? findForcedRandomListItem(items, forceNextItemId)
       : null;
@@ -93,14 +113,32 @@ export function WheelTool() {
     );
     const segmentDegrees = activeItems.length > 0 ? 360 / activeItems.length : 360;
     const targetOffset = pickedIndex * segmentDegrees + segmentDegrees / 2;
+    const nextRotation = getWheelTargetRotation(rotation, targetOffset);
 
-    setRotation((currentRotation) => currentRotation + 1080 + (360 - targetOffset));
+    setIsSpinning(true);
+    setRotation(nextRotation);
     setResult(pickedItem);
     setHistory((currentHistory) => [pickedItem, ...currentHistory].slice(0, 8));
 
     if (removeWinner) {
-      setItems((currentItems) => removeRandomListItem(currentItems, pickedItem.id));
+      if (removeWinnerTimeoutRef.current) {
+        clearTimeout(removeWinnerTimeoutRef.current);
+      }
+
+      removeWinnerTimeoutRef.current = setTimeout(() => {
+        setItems((currentItems) => removeRandomListItem(currentItems, pickedItem.id));
+        removeWinnerTimeoutRef.current = null;
+      }, spinDurationMs);
     }
+
+    if (spinTimeoutRef.current) {
+      clearTimeout(spinTimeoutRef.current);
+    }
+
+    spinTimeoutRef.current = setTimeout(() => {
+      setIsSpinning(false);
+      spinTimeoutRef.current = null;
+    }, spinDurationMs);
 
     if (forcedItem) {
       setForceNextItemId("");
@@ -221,7 +259,7 @@ export function WheelTool() {
           </div>
           <button
             className="h-11 rounded-md bg-primary px-5 text-sm font-semibold text-primary-foreground transition hover:opacity-90 disabled:opacity-50"
-            disabled={activeItems.length === 0}
+            disabled={activeItems.length === 0 || isSpinning}
             onClick={handleSpin}
             type="button"
           >
@@ -335,13 +373,14 @@ export function WheelTool() {
 
         <div className="mt-6 grid gap-5 lg:grid-cols-[22rem_minmax(0,1fr)]">
           <div className="flex items-center justify-center">
-            <div className="relative aspect-square w-full max-w-80">
+            <div className="relative aspect-square w-full max-w-80 overflow-hidden">
               <div className="absolute left-1/2 top-0 z-10 h-0 w-0 -translate-x-1/2 border-x-[12px] border-t-[24px] border-x-transparent border-t-foreground" />
               <div
                 aria-label="Spin wheel"
-                className="h-full w-full rounded-full border border-border shadow-sm transition-transform duration-700 ease-out"
+                className="relative h-full w-full overflow-hidden rounded-full border border-border shadow-sm transition-transform ease-out"
                 style={{
                   background: wheelBackground,
+                  transitionDuration: `${spinDurationMs}ms`,
                   transform: `rotate(${rotation}deg)`,
                 }}
               />
@@ -561,6 +600,18 @@ function buildWheelBackground(items: RandomListItem[]) {
   });
 
   return `conic-gradient(${segments.join(", ")})`;
+}
+
+function getWheelTargetRotation(currentRotation: number, targetOffset: number) {
+  const currentNormalized = normalizeDegrees(currentRotation);
+  const targetRotation = normalizeDegrees(-targetOffset);
+  const forwardDelta = normalizeDegrees(targetRotation - currentNormalized);
+
+  return currentRotation + 1080 + forwardDelta;
+}
+
+function normalizeDegrees(degrees: number) {
+  return ((degrees % 360) + 360) % 360;
 }
 
 function filterWheelPresets(presets: AppPreset[]): RandomListPreset[] {

@@ -370,12 +370,12 @@ export function DiceRoller() {
               </div>
               <div className="mt-4 flex flex-wrap gap-2">
                 {latestRoll.rolls.map((roll, index) => (
-                  <span
-                    className="inline-flex h-10 min-w-10 items-center justify-center rounded-md border border-border bg-surface px-3 text-sm font-semibold"
+                  <DieFace
+                    index={index}
                     key={`${latestRoll.rolledAt}-${index}`}
-                  >
-                    {roll}
-                  </span>
+                    roll={roll}
+                    sides={latestRoll.sides}
+                  />
                 ))}
               </div>
             </div>
@@ -461,6 +461,17 @@ export function DiceRoller() {
                 <p className="mt-1 text-xs text-muted">
                   {copy.tools.dice.rolls}: {item.rolls.join(", ")}
                 </p>
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                  {item.rolls.map((roll, index) => (
+                    <DieFace
+                      index={index}
+                      key={`${item.rolledAt}-${index}`}
+                      roll={roll}
+                      sides={item.sides}
+                      size="sm"
+                    />
+                  ))}
+                </div>
               </li>
             ))}
           </ol>
@@ -474,6 +485,71 @@ export function DiceRoller() {
     </section>
   );
 }
+
+function DieFace({
+  index,
+  roll,
+  sides,
+  size = "md",
+}: {
+  index: number;
+  roll: number;
+  sides: DiceSides;
+  size?: "sm" | "md";
+}) {
+  const isD6 = sides === 6 && roll >= 1 && roll <= 6;
+  const containerSize =
+    size === "sm" ? "h-8 w-8 rounded" : "h-14 w-14 rounded-lg";
+  const pipSize = size === "sm" ? "h-1.5 w-1.5" : "h-2.5 w-2.5";
+  const label = `Die ${index + 1}: D${sides} rolled ${roll}`;
+
+  if (!isD6) {
+    return (
+      <span
+        aria-label={label}
+        className={`inline-grid ${containerSize} place-items-center border border-border bg-surface text-center shadow-sm`}
+        role="img"
+        title={label}
+      >
+        <span className="grid leading-none">
+          <span className={size === "sm" ? "text-[0.55rem]" : "text-[0.65rem]"}>
+            D{sides}
+          </span>
+          <span className={size === "sm" ? "text-sm font-bold" : "text-lg font-bold"}>
+            {roll}
+          </span>
+        </span>
+      </span>
+    );
+  }
+
+  return (
+    <span
+      aria-label={label}
+      className={`inline-grid ${containerSize} grid-cols-3 grid-rows-3 gap-0.5 border border-border bg-surface p-1.5 shadow-sm`}
+      role="img"
+      title={label}
+    >
+      {Array.from({ length: 9 }, (_, pipIndex) => (
+        <span
+          className={`place-self-center rounded-full bg-foreground ${
+            d6PipIndexes[roll].includes(pipIndex) ? pipSize : "h-0 w-0"
+          }`}
+          key={pipIndex}
+        />
+      ))}
+    </span>
+  );
+}
+
+const d6PipIndexes: Record<number, number[]> = {
+  1: [4],
+  2: [0, 8],
+  3: [0, 4, 8],
+  4: [0, 2, 6, 8],
+  5: [0, 2, 4, 6, 8],
+  6: [0, 2, 3, 5, 6, 8],
+};
 
 function NumberStepper({
   label,
