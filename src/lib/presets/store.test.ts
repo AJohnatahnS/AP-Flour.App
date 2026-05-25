@@ -95,7 +95,7 @@ describe("preset store", () => {
           id: "invalid",
           toolId: "dice",
           name: "Bad",
-          value: { sides: 7, count: 1, modifier: 0 },
+          value: { sides: 7 as never, count: 1, modifier: 0 },
           createdAt: 100,
           updatedAt: 100,
         },

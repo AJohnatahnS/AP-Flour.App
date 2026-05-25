@@ -1,6 +1,6 @@
 import type { AppDictionary } from "@/lib/i18n/dictionaries";
 
-export type ToolId = "dice" | "wheel" | "picker" | "score" | "timer";
+export type ToolId = "dice" | "wheel" | "picker" | "cards" | "score" | "timer";
 
 export type ToolCatalogItem = {
   id: ToolId;
@@ -31,6 +31,13 @@ export const toolCatalog: ToolCatalogItem[] = [
     description: "Pick from the same saved lists without the wheel animation.",
     action: "Open picker",
     tone: "border-l-sky-600",
+  },
+  {
+    id: "cards",
+    name: "Cards",
+    description: "Shuffle a standard deck and draw cards without repeats.",
+    action: "Open cards",
+    tone: "border-l-rose-600",
   },
   {
     id: "score",

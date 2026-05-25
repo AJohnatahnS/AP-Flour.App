@@ -121,7 +121,7 @@ describe("rollDice", () => {
   });
 
   it("rejects invalid dice config and invalid forced results", () => {
-    expect(() => rollDice({ sides: 7, count: 1, modifier: 0 })).toThrow(
+    expect(() => rollDice({ sides: 7 as never, count: 1, modifier: 0 })).toThrow(
       "supported die",
     );
     expect(() =>

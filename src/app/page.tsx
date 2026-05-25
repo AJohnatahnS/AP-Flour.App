@@ -72,6 +72,8 @@ function getToolHref(toolId: string) {
       return "/wheel";
     case "picker":
       return "/picker";
+    case "cards":
+      return "/cards";
     case "score":
       return "/score";
     case "timer":

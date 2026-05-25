@@ -39,6 +39,19 @@ test("user can save and load a picker preset", async ({ page }) => {
   await expect(page.getByText("E2E Players")).toBeVisible();
 });
 
+test("user can draw cards from a shuffled deck", async ({ page }) => {
+  await page.getByRole("link", { name: "Open cards" }).click();
+
+  await expect(page.getByText("Cards remaining", { exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Draw", exact: true }).click();
+
+  await expect(page.getByText("Latest draw")).toBeVisible();
+  await expect(page.getByText("Draw history")).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "51 cards remaining" }),
+  ).toBeVisible();
+});
+
 test("user can start, pause, and reset the timer", async ({ page }) => {
   await page.getByRole("link", { name: "Open timer" }).click();
 
