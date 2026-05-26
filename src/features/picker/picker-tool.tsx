@@ -8,7 +8,8 @@ import {
   findForcedRandomListItem,
 } from "@/lib/cheat/random-list";
 import { formatCopy } from "@/lib/i18n/dictionaries";
-import { useLocaleCopy } from "@/lib/i18n/use-locale-copy";
+import { useLocaleCopy, useLocaleSettings } from "@/lib/i18n/use-locale-copy";
+import { getPickerStarterPresets } from "@/lib/presets/starter-random-lists";
 import {
   getPresetStoreServerSnapshot,
   getPresetStoreSnapshot,
@@ -42,6 +43,7 @@ const configuredCheatPin = getConfiguredCheatPin(
 
 export function PickerTool() {
   const copy = useLocaleCopy();
+  const { locale } = useLocaleSettings();
   const [items, setItems] = useState<RandomListItem[]>(defaultItems);
   const [result, setResult] = useState<RandomListItem | null>(null);
   const [history, setHistory] = useState<RandomListItem[]>([]);
@@ -65,6 +67,7 @@ export function PickerTool() {
     () => filterRandomListPresets(presetStore.presets),
     [presetStore.presets],
   );
+  const starterPresets = useMemo(() => getPickerStarterPresets(locale), [locale]);
   const activeItems = items.filter((item) => item.enabled);
   const activeItemCount = activeItems.length;
 
@@ -178,6 +181,14 @@ export function PickerTool() {
     setItems(preset.value.items);
     setPresetName(preset.name);
     setLastSavedPresetId(preset.id);
+    setResult(null);
+    setHistory([]);
+  }
+
+  function loadStarterPreset(preset: (typeof starterPresets)[number]) {
+    setItems(preset.items);
+    setPresetName(preset.name);
+    setLastSavedPresetId(null);
     setResult(null);
     setHistory([]);
   }
@@ -450,6 +461,35 @@ export function PickerTool() {
       </div>
 
       <aside className="grid gap-5">
+        <div className="rounded-lg border border-border bg-surface p-4 shadow-sm sm:p-5">
+          <h2 className="text-lg font-semibold">
+            {copy.tools.picker.starterPresets}
+          </h2>
+          <ol className="mt-4 grid gap-2">
+            {starterPresets.map((preset) => (
+              <li
+                className="rounded-md border border-border bg-background p-3"
+                key={preset.id}
+              >
+                <button
+                  className="w-full min-w-0 text-left"
+                  onClick={() => loadStarterPreset(preset)}
+                  type="button"
+                >
+                  <span className="block truncate text-sm font-semibold">
+                    {preset.name}
+                  </span>
+                  <span className="mt-1 block text-xs text-muted">
+                    {formatCopy(copy.tools.picker.itemCount, {
+                      count: preset.items.length,
+                    })}
+                  </span>
+                </button>
+              </li>
+            ))}
+          </ol>
+        </div>
+
         <div className="rounded-lg border border-border bg-surface p-4 shadow-sm sm:p-5">
           <h2 className="text-lg font-semibold">{copy.tools.picker.presets}</h2>
           {presets.length > 0 ? (

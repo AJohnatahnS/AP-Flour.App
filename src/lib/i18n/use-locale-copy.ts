@@ -10,11 +10,17 @@ import {
 } from "@/lib/settings/local-storage";
 
 export function useLocaleCopy() {
+  const settings = useLocaleSettings();
+
+  return dictionaries[settings.locale];
+}
+
+export function useLocaleSettings() {
   const settings = useSyncExternalStore(
     subscribeSettingsStore,
     getSettingsStoreSnapshot,
     getSettingsStoreServerSnapshot,
   );
 
-  return dictionaries[settings.locale];
+  return settings;
 }

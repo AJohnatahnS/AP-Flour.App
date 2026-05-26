@@ -8,7 +8,8 @@ import {
   findForcedRandomListItem,
 } from "@/lib/cheat/random-list";
 import { formatCopy } from "@/lib/i18n/dictionaries";
-import { useLocaleCopy } from "@/lib/i18n/use-locale-copy";
+import { useLocaleCopy, useLocaleSettings } from "@/lib/i18n/use-locale-copy";
+import { getWheelStarterPresets } from "@/lib/presets/starter-random-lists";
 import {
   getPresetStoreServerSnapshot,
   getPresetStoreSnapshot,
@@ -44,6 +45,7 @@ const configuredCheatPin = getConfiguredCheatPin(
 
 export function WheelTool() {
   const copy = useLocaleCopy();
+  const { locale } = useLocaleSettings();
   const [items, setItems] = useState<RandomListItem[]>(defaultItems);
   const [result, setResult] = useState<RandomListItem | null>(null);
   const [history, setHistory] = useState<RandomListItem[]>([]);
@@ -71,6 +73,7 @@ export function WheelTool() {
     () => filterWheelPresets(presetStore.presets),
     [presetStore.presets],
   );
+  const starterPresets = useMemo(() => getWheelStarterPresets(locale), [locale]);
   const activeItems = items.filter((item) => item.enabled);
   const wheelBackground = buildWheelBackground(activeItems);
 
@@ -226,6 +229,15 @@ export function WheelTool() {
     setItems(preset.value.items);
     setPresetName(preset.name);
     setLastSavedPresetId(preset.id);
+    setResult(null);
+    setHistory([]);
+    setRotation(0);
+  }
+
+  function loadStarterPreset(preset: (typeof starterPresets)[number]) {
+    setItems(preset.items);
+    setPresetName(preset.name);
+    setLastSavedPresetId(null);
     setResult(null);
     setHistory([]);
     setRotation(0);
@@ -517,6 +529,35 @@ export function WheelTool() {
       </div>
 
       <aside className="grid gap-5">
+        <div className="rounded-lg border border-border bg-surface p-4 shadow-sm sm:p-5">
+          <h2 className="text-lg font-semibold">
+            {copy.tools.wheel.starterPresets}
+          </h2>
+          <ol className="mt-4 grid gap-2">
+            {starterPresets.map((preset) => (
+              <li
+                className="rounded-md border border-border bg-background p-3"
+                key={preset.id}
+              >
+                <button
+                  className="w-full min-w-0 text-left"
+                  onClick={() => loadStarterPreset(preset)}
+                  type="button"
+                >
+                  <span className="block truncate text-sm font-semibold">
+                    {preset.name}
+                  </span>
+                  <span className="mt-1 block text-xs text-muted">
+                    {formatCopy(copy.tools.wheel.itemCount, {
+                      count: preset.items.length,
+                    })}
+                  </span>
+                </button>
+              </li>
+            ))}
+          </ol>
+        </div>
+
         <div className="rounded-lg border border-border bg-surface p-4 shadow-sm sm:p-5">
           <h2 className="text-lg font-semibold">{copy.tools.wheel.presets}</h2>
           {presets.length > 0 ? (
