@@ -79,3 +79,215 @@ button,
 a {
   -webkit-tap-highlight-color: transparent;
 }
+
+.tool-card-dice {
+  border-color: #a7f3d0;
+  background: #ecfdf5;
+  color: #064e3b;
+}
+
+.tool-icon-dice {
+  background: #059669;
+  color: #ffffff;
+}
+
+.tool-card-wheel {
+  border-color: #fed7aa;
+  background: #fff7ed;
+  color: #7c2d12;
+}
+
+.tool-icon-wheel {
+  background: #ea580c;
+  color: #ffffff;
+}
+
+.tool-card-picker {
+  border-color: #bae6fd;
+  background: #f0f9ff;
+  color: #0c4a6e;
+}
+
+.tool-icon-picker {
+  background: #0284c7;
+  color: #ffffff;
+}
+
+.tool-card-cards {
+  border-color: #fecdd3;
+  background: #fff1f2;
+  color: #881337;
+}
+
+.tool-icon-cards {
+  background: #e11d48;
+  color: #ffffff;
+}
+
+.tool-card-score {
+  border-color: #ddd6fe;
+  background: #f5f3ff;
+  color: #4c1d95;
+}
+
+.tool-icon-score {
+  background: #7c3aed;
+  color: #ffffff;
+}
+
+.tool-card-timer {
+  border-color: #fde68a;
+  background: #fffbeb;
+  color: #78350f;
+}
+
+.tool-icon-timer {
+  background: #facc15;
+  color: #78350f;
+}
+
+:root[data-theme="dark"] .tool-card-dice,
+:root:not([data-theme]) .tool-card-dice {
+  border-color: #047857;
+  background: #064e3b;
+  color: #ecfdf5;
+}
+
+:root[data-theme="dark"] .tool-icon-dice,
+:root:not([data-theme]) .tool-icon-dice {
+  background: #34d399;
+  color: #064e3b;
+}
+
+:root[data-theme="dark"] .tool-card-wheel,
+:root:not([data-theme]) .tool-card-wheel {
+  border-color: #9a3412;
+  background: #431407;
+  color: #ffedd5;
+}
+
+:root[data-theme="dark"] .tool-icon-wheel,
+:root:not([data-theme]) .tool-icon-wheel {
+  background: #fb923c;
+  color: #431407;
+}
+
+:root[data-theme="dark"] .tool-card-picker,
+:root:not([data-theme]) .tool-card-picker {
+  border-color: #0369a1;
+  background: #082f49;
+  color: #e0f2fe;
+}
+
+:root[data-theme="dark"] .tool-icon-picker,
+:root:not([data-theme]) .tool-icon-picker {
+  background: #38bdf8;
+  color: #082f49;
+}
+
+:root[data-theme="dark"] .tool-card-cards,
+:root:not([data-theme]) .tool-card-cards {
+  border-color: #be123c;
+  background: #4c0519;
+  color: #ffe4e6;
+}
+
+:root[data-theme="dark"] .tool-icon-cards,
+:root:not([data-theme]) .tool-icon-cards {
+  background: #fb7185;
+  color: #4c0519;
+}
+
+:root[data-theme="dark"] .tool-card-score,
+:root:not([data-theme]) .tool-card-score {
+  border-color: #6d28d9;
+  background: #2e1065;
+  color: #ede9fe;
+}
+
+:root[data-theme="dark"] .tool-icon-score,
+:root:not([data-theme]) .tool-icon-score {
+  background: #a78bfa;
+  color: #2e1065;
+}
+
+:root[data-theme="dark"] .tool-card-timer,
+:root:not([data-theme]) .tool-card-timer {
+  border-color: #b45309;
+  background: #451a03;
+  color: #fef3c7;
+}
+
+:root[data-theme="dark"] .tool-icon-timer,
+:root:not([data-theme]) .tool-icon-timer {
+  background: #fcd34d;
+  color: #451a03;
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme]) .tool-card-dice {
+    border-color: #a7f3d0;
+    background: #ecfdf5;
+    color: #064e3b;
+  }
+
+  :root:not([data-theme]) .tool-icon-dice {
+    background: #059669;
+    color: #ffffff;
+  }
+
+  :root:not([data-theme]) .tool-card-wheel {
+    border-color: #fed7aa;
+    background: #fff7ed;
+    color: #7c2d12;
+  }
+
+  :root:not([data-theme]) .tool-icon-wheel {
+    background: #ea580c;
+    color: #ffffff;
+  }
+
+  :root:not([data-theme]) .tool-card-picker {
+    border-color: #bae6fd;
+    background: #f0f9ff;
+    color: #0c4a6e;
+  }
+
+  :root:not([data-theme]) .tool-icon-picker {
+    background: #0284c7;
+    color: #ffffff;
+  }
+
+  :root:not([data-theme]) .tool-card-cards {
+    border-color: #fecdd3;
+    background: #fff1f2;
+    color: #881337;
+  }
+
+  :root:not([data-theme]) .tool-icon-cards {
+    background: #e11d48;
+    color: #ffffff;
+  }
+
+  :root:not([data-theme]) .tool-card-score {
+    border-color: #ddd6fe;
+    background: #f5f3ff;
+    color: #4c1d95;
+  }
+
+  :root:not([data-theme]) .tool-icon-score {
+    background: #7c3aed;
+    color: #ffffff;
+  }
+
+  :root:not([data-theme]) .tool-card-timer {
+    border-color: #fde68a;
+    background: #fffbeb;
+    color: #78350f;
+  }
+
+  :root:not([data-theme]) .tool-icon-timer {
+    background: #facc15;
+    color: #78350f;
+  }
+}
