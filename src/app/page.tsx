@@ -19,7 +19,7 @@ export default function Home() {
             <h1 className="text-3xl font-semibold tracking-normal">{copy.appName}</h1>
           </div>
           <Link
-            className="h-10 rounded-md border border-border bg-surface px-4 text-sm font-medium text-foreground shadow-sm transition hover:bg-surface-strong"
+            className="inline-flex h-10 items-center justify-center rounded-md border border-border bg-surface px-4 text-sm font-medium text-foreground shadow-sm transition hover:bg-surface-strong"
             href="/settings"
           >
             {copy.settings}
